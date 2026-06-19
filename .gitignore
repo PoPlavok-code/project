@@ -1,0 +1,19 @@
+# Виртуальные окружения
+venv/
+.venv/
+env/
+
+# Файлы IDE и кэш
+.idea/
+.vscode/
+__pycache__/
+*.pyc
+*.pyo
+
+# Секретные переменные
+.env
+
+# Системные файлы
+.DS_Store
+
+htmlcov
