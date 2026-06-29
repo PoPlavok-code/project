@@ -1,68 +1,90 @@
-"""Модуль для обработки банковских операций."""
-
+import re
+from typing import List, Dict, Any
 from datetime import datetime
 
 
-def filter_by_state(data: list, state: str = "EXECUTED") -> list:
+def filter_by_state(data: List[Dict[str, Any]], state: str = "EXECUTED") -> List[Dict[str, Any]]:
     """
-    Фильтрует список операций по заданному статусу.
+    Фильтрует операции по статусу.
 
     Args:
-        data: Список словарей с данными об операциях.
-        state: Статус операции (по умолчанию 'EXECUTED').
+        data: Список словарей с операциями
+        state: Статус для фильтрации (по умолчанию EXECUTED)
 
     Returns:
-        Список словарей, соответствующих заданному статусу.
+        Список операций с указанным статусом
     """
-    if not data:
-        return []
-
-    return [item for item in data if item.get("state") == state]
+    return [op for op in data if op.get("state") == state]
 
 
-def sort_by_date(data: list, reverse: bool = True) -> list:
+def sort_by_date(data: List[Dict[str, Any]], reverse: bool = True) -> List[Dict[str, Any]]:
     """
-    Сортирует список операций по дате.
+    Сортирует операции по дате.
 
     Args:
-        data: Список словарей с данными об операциях.
-        reverse: Порядок сортировки
-        (True — по убыванию, False — по возрастанию).
+        data: Список словарей с операциями
+        reverse: Если True — по убыванию (новые сначала), иначе по возрастанию
 
     Returns:
-        Отсортированный список словарей.
+        Отсортированный список операций
+
+    Raises:
+        ValueError: Если формат даты невалиден (но не пустой)
     """
-    if not data:
-        return []
 
-    def get_date_key(item: dict) -> datetime:
-        date_str = item.get("date")
-        if date_str:
-            return datetime.fromisoformat(date_str)
-        return datetime.min
+    def parse_date(date_str: str) -> datetime:
+        # Если даты нет — возвращаем минимальную дату
+        if not date_str:
+            return datetime.min
 
-    return sorted(data, key=get_date_key, reverse=reverse)
+        try:
+            return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            raise ValueError(f"Невалидный формат даты: {date_str}")
+
+    return sorted(data, key=lambda x: parse_date(x.get("date", "")), reverse=reverse)
 
 
-if __name__ == "__main__":
-    operations = [
-        {"id": 414288290, "state": "EXECUTED", "date": "2019-07-03T18:35:29.512364"},
-        {"id": 939719570, "state": "EXECUTED", "date": "2018-06-30T02:08:58.425572"},
-        {"id": 594226727, "state": "CANCELED", "date": "2018-09-12T21:27:25.241689"},
-        {"id": 615064591, "state": "CANCELED", "date": "2018-10-14T08:21:33.419441"},
-    ]
+def process_bank_search(data: List[Dict[str, Any]], search: str) -> List[Dict[str, Any]]:
+    """
+    Ищет операции по описанию с использованием регулярных выражений.
 
-    print("--- Тест filter_by_state ---")
-    executed = filter_by_state(operations)
-    print(f"Найдено EXECUTED: {len(executed)} шт.")
-    print(executed)
+    Args:
+        data: Список словарей с операциями
+        search: Строка поиска
 
-    canceled = filter_by_state(operations, "CANCELED")
-    print(f"\nНайдено CANCELED: {len(canceled)} шт.")
-    print(canceled)
+    Returns:
+        Список операций, где в описании есть искомая строка
+    """
+    result: List[Dict[str, Any]] = []
+    pattern = re.compile(re.escape(search), re.IGNORECASE)
 
-    print("\n--- Тест sort_by_date ---")
-    sorted_ops = sort_by_date(operations)
-    print("Сортировка по убыванию (сначала 2019 год):")
-    for op in sorted_ops:
-        print(f"{op['date']} | {op['state']}")
+    for operation in data:
+        description = operation.get("description", "")
+        if pattern.search(description):
+            result.append(operation)
+
+    return result
+
+
+def process_bank_operations(data: List[Dict[str, Any]], categories: List[str]) -> Dict[str, int]:
+    """
+    Подсчитывает количество операций в каждой категории.
+
+    Args:
+        data: Список словарей с операциями
+        categories: Список названий категорий
+
+    Returns:
+        Словарь {категория: количество операций}
+    """
+    result: Dict[str, int] = {category: 0 for category in categories}
+
+    for operation in data:
+        description = operation.get("description", "")
+        for category in categories:
+            if category.lower() in description.lower():
+                result[category] += 1
+                break
+
+    return result

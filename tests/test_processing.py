@@ -1,6 +1,6 @@
 # tests/test_processing.py
 import pytest
-from src.processing import filter_by_state, sort_by_date
+from src.processing import filter_by_state, sort_by_date,process_bank_search, process_bank_operations
 
 
 def test_filter_by_state(sample_transactions):
@@ -67,3 +67,29 @@ def test_sort_by_date_missing_key():
         sort_by_date(data)
     except (KeyError, TypeError):
         pass  # Ожидаемо при отсутствии ключа
+
+
+def test_process_bank_search():
+    data = [
+        {"description": "Перевод с карты на карту"},
+        {"description": "Оплата в магазине"},
+        {"description": "Перевод организации"}
+    ]
+
+    result = process_bank_search(data, "Перевод")
+    assert len(result) == 2
+    assert result[0]["description"] == "Перевод с карты на карту"
+
+
+def test_process_bank_operations():
+    data = [
+        {"description": "Перевод с карты на карту"},
+        {"description": "Перевод организации"},
+        {"description": "Оплата в магазине"}
+    ]
+
+    categories = ["Перевод", "Оплата"]
+    result = process_bank_operations(data, categories)
+
+    assert result["Перевод"] == 2
+    assert result["Оплата"] == 1

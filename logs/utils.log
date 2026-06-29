@@ -1,4 +1,0 @@
-2026-06-28 21:13:59,637 - src.utils - INFO - Загрузка транзакций из CSV: data/transactions.csv
-2026-06-28 21:13:59,644 - src.utils - INFO - Успешно загружено 1000 записей из CSV
-2026-06-28 21:13:59,644 - src.utils - INFO - Загрузка транзакций из Excel: data/transactions_excel.xlsx
-2026-06-28 21:13:59,754 - src.utils - INFO - Успешно загружено 1000 записей из Excel
