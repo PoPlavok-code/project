@@ -12,22 +12,28 @@ from src.processing import filter_by_state, sort_by_date, process_bank_search
 
 def format_date(date_str: str) -> str:
     """Форматирует дату из ISO формата в DD.MM.YYYY."""
+    if not isinstance(date_str, str) or not date_str:
+        return ""
     try:
         dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
         return dt.strftime('%d.%m.%Y')
     except Exception:
-        return date_str[:10]
+        return str(date_str)[:10]
 
 
-def format_account(account: str) -> str:
+def format_account(account) -> str:
     """Маскирует номер счета или карты."""
-    if not account:
+    # Защита от NaN, None, float, int и других нестроковых типов
+    if not isinstance(account, str) or not account:
         return ""
+
     parts = account.split()
     if len(parts) < 2:
         return account
+
     account_type = parts[0]
     account_number = parts[-1]
+
     if account_type == "Счет":
         return f"Счет {get_mask_account(account_number)}"
     else:

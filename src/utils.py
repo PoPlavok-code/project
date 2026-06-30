@@ -57,6 +57,8 @@ def load_transactions_from_csv(file_path: str) -> List[Dict[str, Any]]:
 
     try:
         df = pd.read_csv(file_path, sep=";")
+        # Заменяем NaN на None
+        df = df.where(pd.notnull(df), None)
         result = cast(List[Dict[str, Any]], df.to_dict(orient="records"))
         logger.info(f"Успешно загружено {len(result)} записей из CSV")
         return result
@@ -74,6 +76,8 @@ def load_transactions_from_excel(file_path: str) -> List[Dict[str, Any]]:
 
     try:
         df = pd.read_excel(file_path, engine="openpyxl")
+        # Заменяем NaN на None
+        df = df.where(pd.notnull(df), None)
         result = cast(List[Dict[str, Any]], df.to_dict(orient="records"))
         logger.info(f"Успешно загружено {len(result)} записей из Excel")
         return result
